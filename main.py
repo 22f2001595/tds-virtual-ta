@@ -4,6 +4,10 @@ from typing import Optional, List
 import base64
 
 app = FastAPI()
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the TDS Virtual TA!"}
+
 
 class QuestionRequest(BaseModel):
     question: str
