@@ -1,7 +1,11 @@
- 
+
 fastapi
 uvicorn
 pydantic
-easyocr
-Pillow
-python-multipart
+faiss-cpu
+numpy
+sentence-transformers
+python-dotenv
+markdownify
+beautifulsoup4
+playwright

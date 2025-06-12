@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TDS Virtual TA</title>
+  <style>
+    body { font-family: Arial; max-width: 800px; margin: auto; padding: 2rem; background: #f9f9f9; }
+    h1 { text-align: center; color: #333; }
+    label { display: block; margin-top: 1rem; font-weight: bold; }
+    textarea, select, button { width: 100%; padding: 0.75rem; margin-top: 0.5rem; }
+    .result { background: white; padding: 1rem; margin-top: 1rem; border-radius: 8px; box-shadow: 0 0 4px #ccc; }
+    .result a { color: #0366d6; text-decoration: none; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>TDS Virtual TA</h1>
+
+  <label for="question">Enter your question:</label>
+  <textarea id="question" rows="4" placeholder="e.g., How to connect DuckDB to Pandas?"></textarea>
+
+  <label for="source">Search Source:</label>
+  <select id="source">
+    <option value="all">All</option>
+    <option value="discourse">Discourse</option>
+    <option value="note">Notes</option>
+  </select>
+
+  <button onclick="ask()">Ask</button>
+
+  <div id="answers"></div>
+
+  <script>
+    async function ask() {
+      const question = document.getElementById("question").value;
+      const source = document.getElementById("source").value;
+
+      const response = await fetch("http://127.0.0.1:8000/api/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, source })
+      });
+
+      const data = await response.json();
+      const answersDiv = document.getElementById("answers");
+      answersDiv.innerHTML = "";
+
+      if (data.answers && data.answers.length > 0) {
+        data.answers.forEach(ans => {
+          const div = document.createElement("div");
+          div.className = "result";
+          div.innerHTML = `
+            <a href="${ans.url}" target="_blank">${ans.title || "(No Title)"}</a>
+            <p>${ans.content}</p>
+          `;
+          answersDiv.appendChild(div);
+        });
+      } else {
+        answersDiv.innerHTML = "<p>No relevant answers found.</p>";
+      }
+    }
+  </script>
+</body>
+</html>
