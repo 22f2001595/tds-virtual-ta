@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import base64
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -14,6 +15,7 @@ DISK_PATH = "/var/data"  # ✅ Used for Render persistent disk
 NOTES_INDEX_FILE = os.path.join(DISK_PATH, "notes_faiss.index")
 NOTES_METADATA_FILE = os.path.join(DISK_PATH, "notes_embeddings_metadata.json")
 NOTES_DIR = "markdown_files"
+UPLOAD_IMAGE_PATH = os.path.join(DISK_PATH, "uploaded_image.png")
 
 # Load environment variables
 load_dotenv()
@@ -44,6 +46,7 @@ notes_metadata = []
 class QuestionRequest(BaseModel):
     question: str
     source: str = "all"  # discourse / note / all
+    image: str | None = None  # Optional base64-encoded image
 
 # === Helper ===
 def load_model_and_indexes():
@@ -127,7 +130,18 @@ def semantic_search(query: str, top_k: int = 3, source: str = "all"):
 async def answer_question(req: QuestionRequest):
     try:
         answers = semantic_search(req.question, top_k=6, source=req.source)
+
+        if req.image:
+            try:
+                image_data = base64.b64decode(req.image)
+                with open(UPLOAD_IMAGE_PATH, "wb") as f:
+                    f.write(image_data)
+                logger.info("🖼️ Image saved to uploaded_image.png")
+            except Exception as e:
+                logger.warning(f"⚠️ Failed to decode base64 image: {e}")
+
         return {"answers": answers}
+
     except Exception as e:
         logger.error(f"❌ Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
