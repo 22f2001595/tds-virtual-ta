@@ -16,5 +16,25 @@ A smart Teaching Assistant for IIT Madras' Tools for Data Science (TDS) course �
 
 ---
 
-## 📦 Project Structure
 
+## 🧠 Tech Stack
+- Python, FastAPI
+- FAISS + SentenceTransformers
+- Playwright (for scraping)
+- Render (deployment)
+- GitHub (version control)
+
+
+---
+
+
+## 🔧 Running Locally
+
+---
+
+## 🤝 Acknowledgements
+-IIT Madras BS Degree Program
+-TAs and course contributors
+-S Anand’s course notes
+
+---
