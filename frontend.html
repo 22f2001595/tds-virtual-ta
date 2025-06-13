@@ -2,63 +2,78 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TDS Virtual TA</title>
-  <style>
-    body { font-family: Arial; max-width: 800px; margin: auto; padding: 2rem; background: #f9f9f9; }
-    h1 { text-align: center; color: #333; }
-    label { display: block; margin-top: 1rem; font-weight: bold; }
-    textarea, select, button { width: 100%; padding: 0.75rem; margin-top: 0.5rem; }
-    .result { background: white; padding: 1rem; margin-top: 1rem; border-radius: 8px; box-shadow: 0 0 4px #ccc; }
-    .result a { color: #0366d6; text-decoration: none; font-weight: bold; }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-  <h1>TDS Virtual TA</h1>
+<body class="bg-gray-50 text-gray-800 font-sans p-4">
+  <div class="max-w-2xl mx-auto mt-10">
+    <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">
+      🤖 TDS Virtual TA
+    </h1>
 
-  <label for="question">Enter your question:</label>
-  <textarea id="question" rows="4" placeholder="e.g., How to connect DuckDB to Pandas?"></textarea>
+    <form id="query-form" class="space-y-4">
+      <label class="block">
+        <span class="text-gray-700 font-medium">Your Question</span>
+        <input type="text" id="question" placeholder="e.g. How to connect DuckDB to Pandas?" required
+          class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-indigo-400" />
+      </label>
 
-  <label for="source">Search Source:</label>
-  <select id="source">
-    <option value="all">All</option>
-    <option value="discourse">Discourse</option>
-    <option value="note">Notes</option>
-  </select>
+      <label class="block">
+        <span class="text-gray-700 font-medium">Source</span>
+        <select id="source"
+          class="mt-1 w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:border-indigo-400">
+          <option value="all">All</option>
+          <option value="discourse">Discourse</option>
+          <option value="note">Note</option>
+        </select>
+      </label>
 
-  <button onclick="ask()">Ask</button>
+      <button type="submit"
+        class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition font-semibold">
+        Ask
+      </button>
+    </form>
 
-  <div id="answers"></div>
+    <div id="answers" class="mt-8 space-y-4"></div>
+  </div>
 
   <script>
-    async function ask() {
+    const form = document.getElementById("query-form");
+    const answersDiv = document.getElementById("answers");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      answersDiv.innerHTML = "<p class='text-gray-600'>🔍 Searching...</p>";
+
       const question = document.getElementById("question").value;
       const source = document.getElementById("source").value;
 
-      const response = await fetch("http://127.0.0.1:8000/api/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, source })
-      });
-
-      const data = await response.json();
-      const answersDiv = document.getElementById("answers");
-      answersDiv.innerHTML = "";
-
-      if (data.answers && data.answers.length > 0) {
-        data.answers.forEach(ans => {
-          const div = document.createElement("div");
-          div.className = "result";
-          div.innerHTML = `
-            <a href="${ans.url}" target="_blank">${ans.title || "(No Title)"}</a>
-            <p>${ans.content}</p>
-          `;
-          answersDiv.appendChild(div);
+      try {
+        const res = await fetch("http://localhost:8000/api/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question, source }),
         });
-      } else {
-        answersDiv.innerHTML = "<p>No relevant answers found.</p>";
+
+        const data = await res.json();
+        if (data.answers && data.answers.length > 0) {
+          answersDiv.innerHTML = data.answers
+            .map((ans) => `
+              <div class="p-4 border border-gray-300 rounded-md bg-white shadow-sm">
+                <p class="text-sm text-indigo-600 font-medium">${ans.source || "source"}</p>
+                <h3 class="font-semibold text-lg mb-1">${ans.title || "No title"}</h3>
+                <p class="text-gray-700 whitespace-pre-line">${ans.content}</p>
+                ${ans.url ? `<a href="${ans.url}" target="_blank" class="text-blue-500 text-sm underline mt-2 inline-block">🔗 View Source</a>` : ""}
+              </div>
+            `).join("");
+        } else {
+          answersDiv.innerHTML = "<p class='text-red-500'>No results found.</p>";
+        }
+      } catch (err) {
+        answersDiv.innerHTML = `<p class='text-red-600'>⚠️ Error: ${err.message}</p>`;
       }
-    }
+    });
   </script>
 </body>
 </html>
