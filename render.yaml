@@ -11,3 +11,7 @@ services:
         sync: false
       - key: PINECONE_API_KEY
         sync: false
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
